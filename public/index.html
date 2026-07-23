@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Nova Transfer</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📡</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <div id="auth-screen" class="screen active">
+      <div class="auth-box">
+        <div class="logo">
+          <span class="logo-icon">📡</span>
+          <h1>Nova Transfer</h1>
+          <p class="subtitle">Быстрая передача файлов и сообщений</p>
+        </div>
+        <div id="auth-form">
+          <div class="input-group">
+            <label for="password">Пароль доступа</label>
+            <input type="password" id="password" placeholder="Введите пароль" autocomplete="off">
+          </div>
+          <button id="auth-btn" class="btn-primary">Подключиться</button>
+        </div>
+        <div id="auth-error" class="error-message hidden"></div>
+        <div class="connection-info">
+          <p>Подключение к <span id="server-address">серверу</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat-screen" class="screen">
+      <div class="chat-header">
+        <div class="header-left">
+          <span class="status-indicator" id="status-dot"></span>
+          <span>Nova Transfer</span>
+        </div>
+        <div class="header-right">
+          <span class="connection-badge">🛡️ Защищено</span>
+        </div>
+      </div>
+
+      <div id="messages-container" class="messages-container">
+        <div class="welcome-message">
+          <div class="welcome-icon">👋</div>
+          <h3>Подключение установлено!</h3>
+          <p>Отправляйте файлы и сообщения между устройствами.</p>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div id="file-preview" class="file-preview hidden">
+          <div class="file-preview-content">
+            <span class="file-preview-icon">📎</span>
+            <div class="file-preview-info">
+              <span class="file-preview-name" id="file-preview-name"></span>
+              <span class="file-preview-size" id="file-preview-size"></span>
+            </div>
+            <button id="clear-file-btn" class="btn-icon" title="Убрать файл">✕</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <label for="file-input" class="btn-icon btn-attach" title="Прикрепить файл">
+            <span>📎</span>
+            <input type="file" id="file-input" multiple>
+          </label>
+          <input type="text" id="message-input" placeholder="Напишите сообщение..." autocomplete="off">
+          <button id="send-btn" class="btn-send" title="Отправить">
+            <span>➤</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>
