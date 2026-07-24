@@ -1,82 +1,270 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="nova">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Nova Transfer</title>
   <link rel="stylesheet" href="/styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📡</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📡</text></svg>">
 </head>
 <body>
   <div id="app">
+    <!-- ===== AUTH SCREEN ===== -->
     <div id="auth-screen" class="screen active">
       <div class="auth-box">
         <div class="logo">
-          <span class="logo-icon">📡</span>
+          <div class="logo-icon-wrap"><span class="logo-icon">📡</span></div>
           <h1>Nova Transfer</h1>
-          <p class="subtitle">Быстрая передача файлов и сообщений</p>
+          <p class="subtitle">Защищённый мессенджер в локальной сети</p>
         </div>
-        <div id="auth-form">
+        <!-- Server password -->
+        <div id="auth-step-password">
           <div class="input-group">
-            <label for="password">Пароль доступа</label>
-            <input type="password" id="password" placeholder="Введите пароль" autocomplete="off">
+            <label>🔑 Пароль сервера</label>
+            <input type="password" id="password" placeholder="Введите пароль" autocomplete="off" spellcheck="false">
           </div>
-          <button id="auth-btn" class="btn-primary">Подключиться</button>
+          <button id="auth-pass-btn" class="btn-primary">Далее</button>
         </div>
-        <div id="auth-error" class="error-message hidden"></div>
-        <div class="connection-info">
-          <p>Подключение к <span id="server-address">серверу</span></p>
+        <!-- Account setup / login -->
+        <div id="auth-step-account" class="hidden">
+          <div id="auth-no-account" class="hidden">
+            <div class="input-group">
+              <label>👤 Придумайте никнейм</label>
+              <input type="text" id="nickname-input" placeholder="Ваш ник" maxlength="20" autocomplete="off">
+            </div>
+            <div class="auth-warning">
+              ⚠️ Данные аккаунта будут скачаны в файл <strong>acc.json</strong>.<br>
+              При последующих входах нужно загрузить этот файл.
+            </div>
+            <button id="auth-create-btn" class="btn-primary">Создать аккаунт</button>
+          </div>
+          <div id="auth-has-account" class="hidden">
+            <p style="text-align:center;margin-bottom:16px;font-size:14px;color:var(--text-secondary)">Загрузите файл аккаунта <strong>acc.json</strong></p>
+            <input type="file" id="acc-file-input" accept=".json" style="display:none">
+            <button id="auth-load-btn" class="btn-primary">📂 Загрузить acc.json</button>
+            <div style="margin-top:12px;text-align:center">
+              <button id="auth-create-new-btn" style="background:none;border:none;color:var(--accent-1);cursor:pointer;font-size:13px;font-family:inherit">Или создать новый аккаунт</button>
+            </div>
+          </div>
+          <div id="auth-error" class="error-message hidden"></div>
+        </div>
+        <div class="connection-info" style="margin-top:20px">
+          <p>📡 Сервер: <span id="server-address">...</span></p>
         </div>
       </div>
     </div>
 
+    <!-- ===== MAIN APP ===== -->
     <div id="chat-screen" class="screen">
+      <!-- Header -->
       <div class="chat-header">
+        <button id="menu-toggle" class="btn-icon menu-btn" title="Меню">☰</button>
         <div class="header-left">
           <span class="status-indicator" id="status-dot"></span>
-          <span>Nova Transfer</span>
-        </div>
-        <div class="header-right">
-          <span class="connection-badge">🛡️ Защищено</span>
-        </div>
-      </div>
-
-      <div id="messages-container" class="messages-container">
-        <div class="welcome-message">
-          <div class="welcome-icon">👋</div>
-          <h3>Подключение установлено!</h3>
-          <p>Отправляйте файлы и сообщения между устройствами.</p>
-        </div>
-      </div>
-
-      <div class="input-area">
-        <div id="file-preview" class="file-preview hidden">
-          <div class="file-preview-content">
-            <span class="file-preview-icon">📎</span>
-            <div class="file-preview-info">
-              <span class="file-preview-name" id="file-preview-name"></span>
-              <span class="file-preview-size" id="file-preview-size"></span>
-            </div>
-            <button id="clear-file-btn" class="btn-icon" title="Убрать файл">✕</button>
+          <div class="header-info">
+            <span class="header-title" id="header-title">Nova</span>
+            <span class="header-subtitle" id="header-subtitle">Загрузка...</span>
           </div>
         </div>
-        <div class="input-row">
-          <label for="file-input" class="btn-icon btn-attach" title="Прикрепить файл">
-            <span>📎</span>
-            <input type="file" id="file-input" multiple>
-          </label>
-          <input type="text" id="message-input" placeholder="Напишите сообщение..." autocomplete="off">
-          <button id="send-btn" class="btn-send" title="Отправить">
-            <span>➤</span>
-          </button>
+        <div class="header-right">
+          <button id="theme-toggle" class="btn-icon" title="Сменить тему">🎨</button>
+        </div>
+      </div>
+
+      <!-- ===== CHAT SIDEBAR (channels list) ===== -->
+      <div class="chat-layout">
+        <div id="channels-sidebar" class="channels-sidebar">
+          <div class="channels-search">
+            <input type="text" id="channel-search" placeholder="Поиск..." autocomplete="off">
+          </div>
+          <div class="channels-list" id="channels-list">
+            <!-- Populated by JS -->
+          </div>
+          <button id="create-chat-btn" class="create-chat-btn" title="Создать чат / канал / группу">✏️</button>
+        </div>
+
+        <!-- ===== MESSAGES AREA ===== -->
+        <div class="chat-main">
+          <div id="chat-placeholder" class="chat-placeholder">
+            <div class="placeholder-icon">💬</div>
+            <h3>Выберите чат</h3>
+            <p>Создайте канал, группу или напишите кому-то</p>
+          </div>
+          <div id="chat-area" class="chat-area hidden">
+            <div id="chat-top-bar" class="chat-top-bar">
+              <span id="chat-target-icon" class="chat-target-icon">#</span>
+              <div class="chat-target-info">
+                <span class="chat-target-name" id="chat-target-name">---</span>
+                <span class="chat-target-meta" id="chat-target-meta">---</span>
+              </div>
+            </div>
+            <div id="messages-container" class="messages-container"></div>
+            <div id="typing-indicator" class="typing-indicator hidden">
+              <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+              <span class="typing-text" id="typing-text">Печатает...</span>
+            </div>
+            <div class="input-area">
+              <div id="file-preview" class="file-preview hidden">
+                <div class="file-preview-content">
+                  <span class="file-preview-icon">📎</span>
+                  <div class="file-preview-info">
+                    <span class="file-preview-name" id="file-preview-name"></span>
+                    <span class="file-preview-size" id="file-preview-size"></span>
+                  </div>
+                  <button id="clear-file-btn" class="btn-icon clear-btn">✕</button>
+                </div>
+              </div>
+              <div class="input-row">
+                <label for="file-input" class="btn-icon btn-attach" title="Прикрепить файл">📎
+                  <input type="file" id="file-input" multiple>
+                </label>
+                <button id="emoji-btn" class="btn-icon" title="Эмодзи">😊</button>
+                <input type="text" id="message-input" placeholder="Напишите сообщение..." autocomplete="off">
+                <button id="send-btn" class="btn-send" title="Отправить">➤</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- ===== DIALOG: Create Chat ===== -->
+    <div id="create-dialog-overlay" class="dialog-overlay hidden">
+      <div class="dialog-box">
+        <div class="dialog-header">
+          <span id="dialog-title">Создать</span>
+          <button id="dialog-close" class="btn-icon">✕</button>
+        </div>
+        <div class="dialog-body">
+          <div class="dialog-tabs">
+            <button class="dialog-tab active" data-type="channel">📢 Канал</button>
+            <button class="dialog-tab" data-type="group">👥 Группа</button>
+            <button class="dialog-tab" data-type="dm">💬 Личный чат</button>
+          </div>
+          <div id="dialog-channel" class="dialog-form active">
+            <div class="input-group">
+              <label>Название канала</label>
+              <input type="text" id="dialog-channel-name" placeholder="например: новости" maxlength="30">
+            </div>
+          </div>
+          <div id="dialog-group" class="dialog-form">
+            <div class="input-group">
+              <label>Название группы</label>
+              <input type="text" id="dialog-group-name" placeholder="например: проект Альфа" maxlength="30">
+            </div>
+            <div class="input-group">
+              <label>Участники (через пробел)</label>
+              <input type="text" id="dialog-group-users" placeholder="ник1 ник2 ник3">
+            </div>
+          </div>
+          <div id="dialog-dm" class="dialog-form">
+            <div class="input-group">
+              <label>Никнейм пользователя</label>
+              <input type="text" id="dialog-dm-name" placeholder="никнейм" maxlength="20">
+            </div>
+            <div class="dialog-hint">Пользователь должен быть онлайн</div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button id="dialog-cancel" class="btn-secondary">Отмена</button>
+          <button id="dialog-confirm" class="btn-primary" style="width:auto;padding:10px 24px">Создать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DIALOG: Create Account Warning ===== -->
+    <div id="acc-warning-dialog" class="dialog-overlay hidden">
+      <div class="dialog-box" style="max-width:400px">
+        <div class="dialog-header">
+          <span>⚠️ Внимание!</span>
+          <button id="acc-warning-close" class="btn-icon">✕</button>
+        </div>
+        <div class="dialog-body" style="text-align:center;line-height:1.6">
+          <p>Ваш аккаунт будет сохранён в файл <strong>acc.json</strong> который будет скачан автоматически.</p>
+          <br>
+          <p style="color:var(--accent-2);font-weight:600">Не удаляйте этот файл!</p>
+          <br>
+          <p>При следующем входе нужно будет загрузить этот файл, чтобы восстановить аккаунт.</p>
+        </div>
+        <div class="dialog-footer" style="justify-content:center">
+          <button id="acc-warning-ok" class="btn-primary" style="width:auto;padding:10px 32px">Я понял! Создать</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SIDEBAR MENU ===== -->
+    <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+    <div id="sidebar" class="sidebar hidden">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📡</span>
+        <span class="sidebar-title">Nova</span>
+        <button id="sidebar-close" class="btn-icon">✕</button>
+      </div>
+      <div class="sidebar-profile">
+        <span class="sidebar-nickname" id="sidebar-nickname">—</span>
+        <span class="sidebar-status" id="sidebar-status">Подключено</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" data-view="admin"><span class="sidebar-icon">⚙️</span><span>Админ-панель</span></button>
+        <button class="sidebar-item" data-view="files"><span class="sidebar-icon">📁</span><span>Файлы</span><span class="sidebar-badge" id="files-badge">0</span></button>
+        <button class="sidebar-item" data-view="themes"><span class="sidebar-icon">🎨</span><span>Темы</span></button>
+        <button class="sidebar-item" data-view="about"><span class="sidebar-icon">ℹ️</span><span>О проекте</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="sidebar-version">v2.0</span>
+        <button id="disconnect-btn" class="btn-icon" title="Отключиться">🚪</button>
+      </div>
+    </div>
+
+    <!-- ===== VIEWS ===== -->
+    <div id="view-files" class="view hidden">
+      <div class="view-header"><h2>📁 Файлы</h2><p class="view-subtitle">Автоудаление через 1 час</p></div>
+      <div id="files-list" class="files-list"><div class="files-empty"><span class="files-empty-icon">📂</span><p>Нет файлов</p></div></div>
+    </div>
+    <div id="view-admin" class="view hidden">
+      <div class="view-header"><h2>⚙️ Админ-панель</h2></div>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card"><span class="stat-icon">🟢</span><div class="stat-info"><span class="stat-value" id="stat-users">0</span><span class="stat-label">Онлайн</span></div></div>
+        <div class="admin-stat-card"><span class="stat-icon">💬</span><div class="stat-info"><span class="stat-value" id="stat-messages">0</span><span class="stat-label">Сообщений</span></div></div>
+        <div class="admin-stat-card"><span class="stat-icon">📎</span><div class="stat-info"><span class="stat-value" id="stat-files-admin">0</span><span class="stat-label">Файлов</span></div></div>
+        <div class="admin-stat-card"><span class="stat-icon">⏱️</span><div class="stat-info"><span class="stat-value" id="stat-uptime">0</span><span class="stat-label">С работы</span></div></div>
+      </div>
+      <div class="admin-section"><h3>👥 Онлайн</h3><div id="users-list" class="admin-list"></div></div>
+    </div>
+    <div id="view-themes" class="view hidden">
+      <div class="view-header"><h2>🎨 Темы</h2></div>
+      <div class="themes-grid" id="themes-grid"></div>
+    </div>
+    <div id="view-about" class="view hidden">
+      <div class="view-header"><h2>ℹ️ О проекте</h2></div>
+      <div class="about-content">
+        <div class="about-logo">📡</div>
+        <h3>Nova Transfer v2.0</h3>
+        <p class="about-desc">Локальный мессенджер с каналами, группами и файлообменом</p>
+        <div class="about-features">
+          <span class="about-feature">🔒 HTTPS</span>
+          <span class="about-feature">🔑 Аккаунты</span>
+          <span class="about-feature">📁 Файлы до 500МБ</span>
+          <span class="about-feature">📢 Каналы</span>
+          <span class="about-feature">👥 Группы</span>
+          <span class="about-feature">💬 Личные чаты</span>
+          <span class="about-feature">🎨 8 тем</span>
+          <span class="about-feature">📱 Любое устройство</span>
+        </div>
+        <p class="about-meta">Сделано с ❤️</p>
+      </div>
+    </div>
+
+    <!-- Emoji Picker -->
+    <div id="emoji-picker" class="emoji-picker hidden">
+      <div class="emoji-picker-header"><span>Эмодзи</span><button id="emoji-close" class="btn-icon">✕</button></div>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+    <!-- Toast -->
     <div id="toast-container" class="toast-container"></div>
   </div>
-
   <script src="/socket.io/socket.io.js"></script>
   <script src="/script.js"></script>
 </body>
 </html>
+</write_to_file>
